@@ -5,7 +5,7 @@ import hashlib
 import CONSTANTS
 from Mempool import Mempool
 from Transaction import TransactionContainer
-from Tools.Keys import Keys
+from core.Keys import Keys
 
 class BlockContainer:
     def __init__(self, index: int, previousHash: str) -> None:

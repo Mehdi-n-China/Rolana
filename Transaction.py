@@ -1,7 +1,6 @@
 import hashlib
 
-from Tools.Keys import Keys
-from Tools import *
+from core import crypto
 import json
 
 import CONSTANTS
@@ -88,7 +87,7 @@ class TransactionHandler:
             if not tx.isValid:
                 raise ValueError("transaction failed to initialize")
 
-            if not Keys.validateSignature(tx.identity, tx.sig, tx.hash):
+            if not crypto.validateSignature(tx.identity, tx.sig, tx.hash):
                 raise ValueError("signature failed to validate")
 
             if tx.type == "transfer":
