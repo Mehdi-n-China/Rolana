@@ -1,0 +1,57 @@
+{
+  "message": {
+    "identity": "identity",
+    "type": "type",
+    "nonce": "nonce",
+    "payload": {
+
+    }
+  },
+  "sig": "signature",
+
+
+  "transfer": {
+    "to": "recipient",
+    "amount": "amount"
+  },
+
+  "bet":{
+    "amount": "amount",
+    "game": "game type",
+    "params": "numbers and other vars, this will be handled by the bet handler internally, the code will be standardized on the client side and rejected if no match"
+  },
+
+  "swap": {
+    "to": "recipient",
+    "amount": "amount of internal coin to swap for pegged coin"
+  },
+
+  "upgrade": "upgrade id"
+
+}
+
+get_symbols(array, weights, k) → pick k symbols for reels
+
+get_symbol_odds(symbol) → return odds or multiplier for a symbol
+
+get_special_symbols(array) → pick rare/wild symbols
+
+generate_spin_result() → returns full reel result based on weights
+
+Utility / helpers
+
+random_index(array) → return a random index
+
+random_range_dict(dict_of_values) → pick key based on weighted values
+
+seed_rng(seed_value) → reset RNG with a new VRF hash
+
+get_unique_numbers(n, min, max) → unique numbers, like lottery draws
+
+Optional / advanced
+
+draw_lottery(array, k) → special random selection for mini-games
+
+generate_symbol_table() → returns a dict of symbols → payouts → special rules
+
+apply_caps(value, max_value) → helper to enforce max payout per spin

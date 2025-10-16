@@ -1,0 +1,11 @@
+/DB.Browser.for.SQLite-v3.13.1-win64/
+# Ignore everything by default
+*
+
+# But don't ignore these directories (so Git can see .py inside)
+!*/
+
+# Allow .py, .pyd, and .json files
+!*.py
+!*.pyd
+!*.json
