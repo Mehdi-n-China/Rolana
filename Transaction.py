@@ -1,10 +1,8 @@
 import hashlib
 
-
-from Keys import Keys
+from Tools.Keys import Keys
 from Tools import *
 import json
-
 
 import CONSTANTS
 
