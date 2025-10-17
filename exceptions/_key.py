@@ -1,3 +1,4 @@
+import os
 
 from _base import CryptoError
 
@@ -15,9 +16,9 @@ class KeySerializationError(CryptoError):
 
 class MissingKeyError(CryptoError):
     def __init__(self, key_type) -> None:
-        if key_type in ("PrivateKey", "PublicKey"):
-            f"The provided {key_type} could not be found."
-        else:
-            self.key_type = f"Bad Argument"
+        super().__init__(f"No valid {key_type} was found")
+
 
 raise MissingKeyError("PrivateKey")
+
+

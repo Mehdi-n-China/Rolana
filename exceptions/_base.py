@@ -52,8 +52,8 @@ class Logger:
 
 
 class CryptoError(Exception):
-    def __init__(self) -> None:
-        pass
+    def __init__(self, msg) -> None:
+        super().__init__(msg)
 
     def _throw(self):
         pass
