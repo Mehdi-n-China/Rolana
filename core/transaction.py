@@ -3,41 +3,44 @@ import hashlib
 from core import crypto
 import json
 
+from exceptions import WrongTypeError
+from tools import check_instance
+
 import CONSTANTS
 
 class TransactionContainer:
     def __init__(self, identity: bytes, type: str, nonce: int, sig: bytes, **kwargs) -> None:
         self.isValid = False
 
-        checkInstance(identity, bytes, 32)
+        check_instance(identity, bytes, 32)
         self.identity = identity
 
-        checkInstance(type, str)
-        if type not in CONSTANTS.TX.TYPES: raise TypeError(f"'{type}' is not a valid transaction type! -> Valid types: {CONSTANTS.TX.TYPES}")
+        check_instance(type, str)
+        if type not in CONSTANTS.TX.TYPES: raise WrongTypeError(f"'{type}' is not a valid transaction type! -> Valid types: {CONSTANTS.TX.TYPES}")
         self.type = type
 
-        checkInstance(nonce, int)
+        check_instance(nonce, int)
         self.nonce = nonce
 
         if type not in CONSTANTS.TX.TYPES:
             raise ValueError(f"Invalid tx type: {type}")
 
         self.to = to = kwargs.get("to")
-        checkInstance(to, bytes)
+        check_instance(to, bytes)
 
         self.amount = amount = kwargs.get("amount")
-        checkInstance(amount, int)
+        check_instance(amount, int)
 
         self.fee = fee = kwargs.get("fee")
-        checkInstance(fee, int)
+        check_instance(fee, int)
         if self.fee < 0:
             raise ValueError(f"Invalid fee value: {fee}")
 
         self.game = game = kwargs.get("game")
-        checkInstance(game, str)
+        check_instance(game, str)
 
         self.params = params = kwargs.get("params")
-        checkInstance(params, list)
+        check_instance(params, list)
 
         requiredFields = getattr(CONSTANTS.TX, f"{type.upper()}_REQUIREMENTS")
         missing = [field for field in requiredFields if getattr(self, field) is None]
@@ -45,7 +48,7 @@ class TransactionContainer:
         if missing:
             raise ValueError(f"Missing fields: {missing}")
 
-        checkInstance(sig, bytes, 64)
+        check_instance(sig, bytes, 64)
         self.sig = sig
 
         self.hash = hashlib.sha256(

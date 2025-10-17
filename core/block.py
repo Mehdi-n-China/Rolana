@@ -4,7 +4,7 @@ import hashlib
 
 import CONSTANTS
 from Mempool import Mempool
-from Transaction import TransactionContainer
+from core.transaction import TransactionContainer
 from core.Keys import Keys
 
 class BlockContainer:

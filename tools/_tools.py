@@ -1,28 +1,30 @@
 import time
 import os
 
+from exceptions import *
 
-def checkInstance(variable: object, expectedType: type = None, length: int = None) -> None:
-    if expectedType is not None:
-        if not isinstance(variable, expectedType):
-            raise TypeError(f"Expected '{expectedType.__name__}', got '{type(variable).__name__}' instead")
+def check_instance(variable: object, expected_type: type = None, length: int = None) -> None:
+    if expected_type is not None:
+        if not isinstance(variable, expected_type):
+            raise WrongTypeError(f"Expected '{expected_type.__name__}', got '{type(variable).__name__}' instead")
 
     if length is not None:
         if isinstance(length, int) and length > 0:
             if not isinstance(variable, (str, list, tuple, dict, set, frozenset, bytes, bytearray, range)):
-                raise TypeError("length can only be checked on: (str, list, tuple, dict, set, frozenset, bytes, bytearray, range)")
+                raise WrongTypeError("length can only be checked on: (str, list, tuple, dict, set, frozenset, bytes, bytearray, range)")
             if len(variable) != length:
-                raise OverflowError(f"Expected length '{length}', got '{len(variable)}' instead")
+                raise WrongLengthError(f"Expected length '{length}', got '{len(variable)}' instead")
         else:
             raise ValueError(f"length must be provided as a positive integer")
 
 def isdigit(string: str) -> bool:
     try:
         if not isinstance(string, str):
-            raise TypeError("called isdigit() on a non-string object")
+            raise WrongTypeError("called isdigit() on a non-string object")
         return all(c in "0123456789" for c in string)
-    except Exception as e:
-        raiseError(e)
+    except KeyError as e:
+        print(e)
+        return False
 
 class Logger:
     def __init__(self, base_dir="logs"):
