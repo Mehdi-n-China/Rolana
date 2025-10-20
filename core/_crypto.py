@@ -4,7 +4,9 @@ import hashlib
 from nacl.signing import SigningKey, VerifyKey
 from nacl.exceptions import BadSignatureError
 
-def format(identity: bytes = None, type: str = None, nonce: int = None, to: bytes = None, amount: int = None, fee: int = None, game: str = None, params: list = None) -> str:
+def get_signable_text(identity: bytes = None, type: str = None, nonce: int = None, to: bytes = None, amount: int = None, fee: int = None,
+                 game: str = None,
+      params: list = None) -> str:
     return hashlib.sha256(
             str(identity.hex()+
                 type+
@@ -16,7 +18,7 @@ def format(identity: bytes = None, type: str = None, nonce: int = None, to: byte
                 str(params))
             .encode()).hexdigest()
 
-def signMessage(privateKey: bytes, message: str) -> bytes:
+def sign_message(privateKey: bytes, message: str) -> bytes:
     """Sign a message using Ed25519, returns hex string"""
     try:
         signingKey = SigningKey(privateKey)
@@ -24,7 +26,7 @@ def signMessage(privateKey: bytes, message: str) -> bytes:
     except Exception as e:
         raise e
 
-def validateSignature(publicKey: bytes, signature: bytes, message: str) -> bool:
+def validate_signature(publicKey: bytes, signature: bytes, message: str) -> bool:
     try:
         verifyKey = VerifyKey(publicKey)
         verifyKey.verify(message.encode(), signature)
@@ -32,7 +34,7 @@ def validateSignature(publicKey: bytes, signature: bytes, message: str) -> bool:
     except BadSignatureError:
         return False
 
-def makePair() -> tuple[bytes, bytes]:
+def make_key_pair() -> tuple[bytes, bytes]:
     sk = SigningKey.generate()
     pk = sk.verify_key
 

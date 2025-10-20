@@ -53,3 +53,7 @@ FEE_RATE = FEE_RATE()
 @dataclass(frozen=True)
 class MINIMUMS:
     BALANCE: int = 1000000
+
+@dataclass(frozen=True)
+class NETWORK:
+    MAX_SIZE_IN_BYTES = 1

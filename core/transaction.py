@@ -1,6 +1,6 @@
 import hashlib
 
-from core import crypto
+from core import _crypto
 import json
 
 from exceptions import WrongTypeError
