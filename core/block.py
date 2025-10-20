@@ -5,7 +5,7 @@ import hashlib
 import CONSTANTS
 from Mempool import Mempool
 from core.transaction import TransactionContainer
-from core.Keys import Keys
+from .crypto import signMessage, makePair, format, validateSignature
 
 class BlockContainer:
     def __init__(self, index: int, previousHash: str) -> None:
@@ -32,8 +32,8 @@ class BlockContainer:
         pass
 
 
-sk, pk = Keys.makePair()
-sig = Keys.signMessage(sk, Keys.format(pk, "bet", 1, to=sk, amount=100, fee=100, game="100",
+sk, pk = makePair()
+sig = signMessage(sk, format(pk, "bet", 1, to=sk, amount=100, fee=100, game="100",
                                        params=["arg", "arg", "arg"]))
 
 start = time.time()
@@ -41,6 +41,6 @@ for i in range(10000):
 
     tx = TransactionContainer(pk, "bet", 1, sig, to=sk, amount=100, fee=100, game="100", params=["arg", "arg", "arg"])
 
-    Keys.validateSignature(tx.identity, tx.sig, tx.hash)
+    validateSignature(tx.identity, tx.sig, tx.hash)
 end = time.time()
 print("Verification time:", end - start, "seconds")

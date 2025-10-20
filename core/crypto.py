@@ -4,8 +4,6 @@ import hashlib
 from nacl.signing import SigningKey, VerifyKey
 from nacl.exceptions import BadSignatureError
 
-__all__ = ["format"]
-
 def format(identity: bytes = None, type: str = None, nonce: int = None, to: bytes = None, amount: int = None, fee: int = None, game: str = None, params: list = None) -> str:
     return hashlib.sha256(
             str(identity.hex()+
