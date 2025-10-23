@@ -23,3 +23,9 @@ class RequirementError(_CryptoError):
     This is what should be used for catching"""
     def __init__(self, msg):
         super().__init__(msg)
+
+class NetworkError(_CryptoError):
+    """Master exception for network related errors
+    This is what should be used for catching"""
+    def __init__(self, msg):
+        super().__init__(msg)
