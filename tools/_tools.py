@@ -26,6 +26,19 @@ def isdigit(string: str) -> bool:
         print(e)
         return False
 
+class Singleton:
+    _instance = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            print("Creating new instance")
+            cls._instance = super().__new__(cls)
+        else:
+            print("Reusing existing instance")
+        return cls._instance
+
+
+
 class Logger:
     def __init__(self, base_dir="logs"):
         self.base_dir = base_dir
