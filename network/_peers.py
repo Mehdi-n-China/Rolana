@@ -1,6 +1,5 @@
 
 import json
-from xml.etree.ElementTree import indent
 
 import exceptions
 from collections import deque
