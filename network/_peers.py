@@ -1,42 +1,12 @@
-
+import gc
 import json
-
+import sys
+import time
+from tools import InstanceManager, Singleton
 import exceptions
 from collections import deque
 
-class InstanceManager:
-    instances = {}
-    instances_memory_addresses = {}
-
-    @classmethod
-    def _push(cls, instance: str, current_instances: int, max_instances: int, instances_addresses: deque[object]) -> None:
-        cls.instances.update({instance: {"active instances": current_instances, "max_instances": max_instances}})
-        cls.instances_memory_addresses.update({instance: ["0x" + hex(id(address))[2:].upper().rjust(16,"0") for address in instances_addresses]})
-
-def Singleton(max_instances: int = 1) -> object:
-    if max_instances < 1 or not isinstance(max_instances, int):
-        raise ValueError("max_instances must be a positive integer")
-
-    class _SingletonBase:
-        _instances = deque(maxlen=max_instances)
-
-        def __new__(cls, *args: tuple, **kwargs: dict) -> object:
-            _number_of_instances = len(cls._instances)
-            if _number_of_instances >= max_instances:
-                print("Cannot Create More Instances of \"{}\" limit={}".format(cls.__name__, max_instances))
-
-            instance = super().__new__(cls)
-            cls._instances.append(instance)
-            InstanceManager._push(cls.__name__, len(cls._instances), max_instances, cls._instances)
-            return instance
-
-        @property
-        def instances(self) -> deque[object]:
-            return self._instances
-
-    return _SingletonBase
-
-class NetworkManager(Singleton(2)):
+class NetworkManager(Singleton(1)):
     pass
 
 class PeerManager(Singleton(1)):
@@ -118,16 +88,17 @@ class PeerManager(Singleton(1)):
             if f:
                 f.close()
 
+
 def main() -> None:
     p = PeerManager()
+    p.load_from_config()
+    p.kill()
+    p.load_from_config()
 
-    n = NetworkManager()
-
-    n = NetworkManager()
-
-    n = NetworkManager()
 
 
 
 if __name__ == "__main__":
     main()
+
+

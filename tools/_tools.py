@@ -1,7 +1,8 @@
 import time
 import os
-
+import sys
 from exceptions import *
+from collections import deque
 
 def check_instance(variable: object, expected_type: type = None, length: int = None) -> None:
     if expected_type is not None:
@@ -26,18 +27,54 @@ def isdigit(string: str) -> bool:
         print(e)
         return False
 
-class Singleton:
-    _instance = None
+class InstanceManager:
+    instances = {}
+    instances_memory_addresses = {}
 
-    def __new__(cls, *args, **kwargs):
-        if cls._instance is None:
-            print("Creating new instance")
-            cls._instance = super().__new__(cls)
-        else:
-            print("Reusing existing instance")
-        return cls._instance
+    @classmethod
+    def push(cls, instance: str, current_instances: int, max_instances: int, instances_addresses: deque[object]) -> None:
+        cls.instances.update({
+            instance: {"active instances": current_instances, "max_instances": max_instances}
+        })
+        cls.instances_memory_addresses.update({
+            instance: ["0x" + hex(id(address))[2:].upper().rjust(16,"0") for address in instances_addresses]
+        })
 
+def Singleton(max_instances: int = 1) -> object:
+    if max_instances < 1 or not isinstance(max_instances, int):
+        raise WrongTypeError("max_instances must be a positive integer")
 
+    class _SingletonBase:
+        instances = deque(maxlen=max_instances)
+
+        def __new__(cls, *args: tuple, **kwargs: dict) -> object:
+            _number_of_instances = len(cls.instances)
+
+            if _number_of_instances >= max_instances:
+                print(f"Cannot create more instances of \"{cls.__name__}\" limit={max_instances}")
+
+            instance = super().__new__(cls)
+            cls.instances.append(instance)
+            InstanceManager.push(cls.__name__, len(cls.instances), max_instances, cls.instances)
+            return instance
+
+        def __getattribute__(self, item):
+            cls = super().__getattribute__("__class__")
+            instances = super().__getattribute__('instances')
+            if self not in instances:
+                raise UnknownInstanceError(f"This instance is not registered for \"{cls.__name__}\"")
+
+            return super().__getattribute__(item)
+
+        def kill(self) -> None:
+            cls = self.__class__
+
+            if self in cls.instances:
+                cls.instances.remove(self)
+
+            InstanceManager.push(cls.__name__, len(cls.instances), max_instances, cls.instances)
+
+    return _SingletonBase
 
 class Logger:
     def __init__(self, base_dir="logs"):
