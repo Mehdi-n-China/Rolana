@@ -1,0 +1,10 @@
+{
+    "is_god": "0",
+    "debug": {
+        "console_logging": 1
+    },
+    "peers": {
+        "is_local_admin": 0,
+        "can_ban": 0
+    }
+}
