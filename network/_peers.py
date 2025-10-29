@@ -1,6 +1,8 @@
 
 from tools import Singleton
 import sqlite3
+import time
+from exceptions import *
 
 class PeerManager(Singleton(1)):
     def __init__(self) -> None:
@@ -61,6 +63,7 @@ class PeerManager(Singleton(1)):
 
         if outbound_peers:
             self.outbound.update(outbound_peers)
+            print(outbound_peers)
             self.pointer.executemany("""
                                         INSERT INTO outbound (
                                             peer_ip,
@@ -105,8 +108,52 @@ class PeerManager(Singleton(1)):
     def kick_peers(self, *, inbound_peers: dict, outbound_peers: dict) -> None:
         pass
 
+class PeerContainer:
+    def __init__(self, ip: str, port: int, last_connection: int, banned_until: int, handshake_status: int, trust_score: int) -> None:
+        self.ip: str = ip
+        self.port: int = port
+        self.last_connection: int = last_connection
+        self.banned_until: int = banned_until
+        self.handshake_status: int = handshake_status
+        self.trust_score: int = trust_score
+
+    @property
+    def is_banned(self) -> bool:
+        return time.time() < self.banned_until
+
+    def adjust_trust(self, adjustment: int) -> None:
+        self.trust_score += adjustment
+        if self.trust_score < 0:
+            self.banned_until = (time.time()) + abs(self.trust_score)
+            self.trust_score = 0
+
+    def timeout(self, timeout: int | float, *, force_float: bool = False) -> None:
+        if isinstance(timeout, float):
+            if force_float:
+                self.banned_until = time.time() + timeout
+            else:
+                raise ValueError("You must set force_float=True to use a float timeout.")
+        elif isinstance(timeout, int):
+            self.banned_until = time.time() + timeout
+        else:
+            raise TypeError(f"Invalid timeout value: {timeout}")
+
+    def force_unban(self, trust_score: int = 0) -> None:
+        self.banned_until = 0
+        if not isinstance(trust_score, int) or trust_score < 0:
+            self.trust_score = 0
+        else:
+            self.trust_score = trust_score
+
+    def to_bytes(self) -> bytes:
+        return b"".join([])
+
+    def ping(self):
+        pass
+
+
 
 if __name__ == "__main__":
     p = PeerManager()
-    p.add_peers(inbound_peers={}, outbound_peers={})
+    p.add_peers(inbound_peers={"hi": [5000, ]}, outbound_peers={})
 

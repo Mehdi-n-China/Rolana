@@ -26,9 +26,6 @@ class MessageManager:
     def _validate_and_classify(self, msg: dict):
         raise NotImplementedError()
 
-            raise ValueError("missing type field")
-        return msg["type"]
-
     def _validate_block(self):
         if
 

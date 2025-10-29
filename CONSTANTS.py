@@ -57,3 +57,14 @@ class MINIMUMS:
 @dataclass(frozen=True)
 class NETWORK:
     MAX_SIZE_IN_BYTES = 1
+
+@dataclass(frozen=True)
+class PEER_TRUST_SCORE:
+    MAX_SCORE: int = 1_000_000
+    INITIAL_SCORE: int = 1_000_000
+
+@dataclass(frozen=True)
+class TRUST_SCORE_FLUCTUATION:
+    VALID_TX: int = 1_000
+    INVALID_TX: int = -10_000
+    RECOVERY_RATE: float = 1
