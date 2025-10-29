@@ -6,7 +6,7 @@ For help, invoke -> help
 """
 
 def handle_flag(flag, value):
-    with open("flags.json", "r+") as f:
+    with open("flags.py", "r+") as f:
         data = json.load(f)
         if flag in data:
             data[flag] = value

@@ -1,8 +1,10 @@
+import json
 
 from tools import Singleton
 import sqlite3
 import time
 from exceptions import *
+from config.config import require_authority
 
 class PeerManager(Singleton(1)):
     def __init__(self) -> None:
@@ -11,16 +13,10 @@ class PeerManager(Singleton(1)):
         self.pointer.execute("PRAGMA synchronous = FULL")
         self.pointer.execute("""CREATE TABLE IF NOT EXISTS inbound
                              (peer_ip TEXT PRIMARY KEY,
-                             peer_port INTEGER,
-                             peer_last_connection INTEGER,
-                             peer_allowed INTEGER,
-                             peer_lives_left INTEGER)""")
+                             peer_data TEXT)""")
         self.pointer.execute("""CREATE TABLE IF NOT EXISTS outbound
                              (peer_ip TEXT PRIMARY KEY,
-                             peer_port INTEGER,
-                             peer_last_connection INTEGER,
-                             peer_allowed INTEGER,
-                             peer_lives_left INTEGER)""")
+                             peer_data TEXT)""")
         self.conn.commit()
 
         self._load_from_config()
@@ -28,94 +24,116 @@ class PeerManager(Singleton(1)):
     def _load_from_config(self) -> None:
         self.pointer.execute("SELECT * FROM inbound")
         inbound = self.pointer.fetchall()
-
         self.pointer.execute("SELECT * FROM outbound")
         outbound = self.pointer.fetchall()
 
-        self.inbound = {peer[0]: [peer[1], peer[2], peer[3], peer[4]] for peer in inbound}
-        self.outbound = {peer[0]: [peer[1], peer[2], peer[3], peer[4]] for peer in outbound}
+        self.inbound: dict[str, object] = {
+                        peer[0]: PeerContainer.from_string(peer[0], peer[1])
+                        for peer
+                        in inbound
+                        }
 
-    def add_peers(self, *, inbound_peers: dict[str, list[int]], outbound_peers: dict[str, list[int]]) -> None:
+        self.outbound: dict[str, object] = {
+                        peer[0]: PeerContainer.from_string(peer[0], peer[1])
+                        for peer
+                        in outbound
+                        }
+
+    def add_peers(self, *,
+                  inbound_peers: dict[str, object] = None,
+                  outbound_peers: dict[str, object] = None) -> None:
+
         if inbound_peers:
-            self.inbound.update(inbound_peers)
+            self.inbound.update({peer_ip: peer_data for peer_ip, peer_data in inbound_peers.items()})
             self.pointer.executemany("""
                                         INSERT INTO inbound (
                                             peer_ip,
-                                            peer_port,
-                                            peer_last_connection,
-                                            peer_allowed,
-                                            peer_lives_left
+                                            peer_data
                                         )
-                                        VALUES (?, ?, ?, ?, ?)
+                                        VALUES (?, ?)
                                         ON CONFLICT(peer_ip)
                                         DO UPDATE SET
-                                            peer_port = excluded.peer_port,
-                                            peer_last_connection = excluded.peer_last_connection,
-                                            peer_allowed = excluded.peer_allowed,
-                                            peer_lives_left = excluded.peer_lives_left
+                                            peer_data = excluded.peer_data
                                         """,
                                         [
-                                            (peer_ip, peer_port, peer_last_connection, peer_allowed, peer_lives_left)
-                                            for peer_ip, peer_port, peer_last_connection, peer_allowed, peer_lives_left
+                                            (peer_ip, peer_data.to_string())
+                                            for peer_ip, peer_data
                                             in inbound_peers.items()
                                         ]
                                     )
 
         if outbound_peers:
             self.outbound.update(outbound_peers)
-            print(outbound_peers)
             self.pointer.executemany("""
                                         INSERT INTO outbound (
                                             peer_ip,
-                                            peer_port,
-                                            peer_last_connection,
-                                            peer_allowed,
-                                            peer_lives_left
+                                            peer_data
                                         )
-                                        VALUES (?, ?, ?, ?, ?)
+                                        VALUES (?, ?)
                                         ON CONFLICT(peer_ip)
                                         DO UPDATE SET
-                                            peer_port = excluded.peer_port,
-                                            peer_last_connection = excluded.peer_last_connection,
-                                            peer_allowed = excluded.peer_allowed,
-                                            peer_lives_left = excluded.peer_lives_left
+                                            peer_data = excluded.peer_data
                                         """,
                                         [
-                                            (peer_ip, peer_port, peer_last_connection, peer_allowed, peer_lives_left)
-                                            for peer_ip, peer_port, peer_last_connection, peer_allowed, peer_lives_left
+                                            (peer_ip, peer_data.to_string())
+                                            for peer_ip, peer_data
                                             in outbound_peers.items()
                                         ]
                                     )
 
         self.conn.commit()
 
-    def remove_peers(self, *, inbound_peers: list, outbound_peers: list) -> None:
+    def remove_peers(self, *,
+                     inbound_peers: list[str] = None,
+                     outbound_peers: list[str] = None) -> None:
+
         for peer in inbound_peers:
             self.inbound.pop(peer, None)
-        self.pointer.executemany("""DELETE
-                                        FROM inbound_peers
-                                        WHERE peer_id = ?""",
-                                 [(peer,) for peer in inbound_peers])
+        self.pointer.executemany("""
+                                    DELETE
+                                    FROM inbound
+                                    WHERE peer_ip = ?
+                                    """,[
+                                        (peer,) for peer in inbound_peers
+                                    ]
+                                 )
 
         for peer in outbound_peers:
             self.outbound.pop(peer, None)
-        self.pointer.executemany("""DELETE
-                                        FROM outbound_peers
-                                        WHERE peer_id = ?""",
-                                 [(peer,) for peer in outbound_peers])
+        self.pointer.executemany("""
+                                    DELETE
+                                    FROM outbound
+                                    WHERE peer_ip = ?
+                                    """,[
+                                        (peer,) for peer in inbound_peers
+                                    ]
+                                 )
         self.conn.commit()
 
-    def kick_peers(self, *, inbound_peers: dict, outbound_peers: dict) -> None:
-        pass
-
 class PeerContainer:
-    def __init__(self, ip: str, port: int, last_connection: int, banned_until: int, handshake_status: int, trust_score: int) -> None:
+    def __init__(self, ip: str = "", port: int = 0, last_connection: int = 0,
+                 banned_until: int = 0, handshake_status: int = 0,
+                 trust_score: int = 0) -> None:
+
         self.ip: str = ip
         self.port: int = port
         self.last_connection: int = last_connection
         self.banned_until: int = banned_until
         self.handshake_status: int = handshake_status
         self.trust_score: int = trust_score
+
+    @staticmethod
+    def from_string(ip, data: bytes):
+        return PeerContainer(ip, *json.loads(data))
+
+    def to_string(self) -> str:
+        return json.dumps([
+            self.port,
+            self.last_connection,
+            self.banned_until,
+            self.handshake_status,
+            self.trust_score
+        ])
 
     @property
     def is_banned(self) -> bool:
@@ -138,6 +156,7 @@ class PeerContainer:
         else:
             raise TypeError(f"Invalid timeout value: {timeout}")
 
+    @require_authority(1)
     def force_unban(self, trust_score: int = 0) -> None:
         self.banned_until = 0
         if not isinstance(trust_score, int) or trust_score < 0:
@@ -154,6 +173,14 @@ class PeerContainer:
 
 
 if __name__ == "__main__":
+    t0 = time.time()
     p = PeerManager()
-    p.add_peers(inbound_peers={"hi": [5000, ]}, outbound_peers={})
+
+    peers = {f"127.0.0.{i}": PeerContainer(f"127.0.0.{i}", 6969, int(time.time()), 0, 0, 1_000_000) for i in range(1, 1000)}
+
+    p.add_peers(inbound_peers=peers, outbound_peers=peers)
+    p.remove_peers(inbound_peers=[peer for peer in peers], outbound_peers=[peer for peer in peers])
+    t1 = time.time()
+    print(t1 - t0)
+    print(p.inbound)
 

@@ -2,26 +2,20 @@
 from typing import Callable, Any
 from functools import wraps
 
-FLAGS = {
-    "IS_GOD": False
-}
-
-def requires_flag(*flags: str) -> Callable[..., Any]:
+def require_authority(authority_level: int) -> Callable[..., Any]:
     """Decorator to check global node flags before executing the function."""
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @wraps(func)
         def wrapper(*args: tuple, **kwargs: dict) -> Any:
-            if FLAGS.get("IS_GOD", False):
-                return func(*args, **kwargs)
-            for flag in flags:
-                if not FLAGS.get(flag, False):
-                    raise PermissionError(f"Permission Required: {flag}")
+            from flags import AUTHORITY_LEVEL
+            if AUTHORITY_LEVEL < authority_level:
+                raise PermissionError(f"You are not authorized to run this command. Needs: {AUTHORITY_LEVEL}, got {authority_level}.")
             return func(*args, **kwargs)
         return wrapper
     return decorator
 
 class NetworkManager:
-    @requires_flag("can_override")
+    @require_authority(1)
     def manual_override(self):
         print("Doing a manual override!")
 
@@ -32,4 +26,5 @@ def main() -> None:
     n.manual_override()
 
 if __name__ == "__main__":
+    print(__name__)
     main()

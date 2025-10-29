@@ -45,8 +45,7 @@ def Singleton(max_instances: int = 1) -> object:
         raise WrongTypeError("max_instances must be a positive integer")
 
     class _SingletonBase:
-        if _allowed_inf:
-            instances: deque[object] = deque(maxlen=max_instances)
+        instances: deque[object] = deque(maxlen=max_instances)
 
         def __new__(cls, *args: tuple, **kwargs: dict) -> object:
             _number_of_instances = len(cls.instances)
