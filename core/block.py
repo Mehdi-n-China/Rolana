@@ -8,7 +8,7 @@ from core.transaction import TransactionContainer
 from ._crypto import signMessage, makePair, format, validateSignature
 
 class BlockContainer:
-    def __init__(self, index: int, previousHash: str) -> None:
+    def __init__(self, index: int, previousHash: str, txs: list[TransactionContainer], ) -> None:
         self.index = index
         self.timestamp = time.time()
         self.txs = Mempool.importSet(CONSTANTS.BLOCK.MAX_TXS)

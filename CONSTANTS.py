@@ -23,7 +23,7 @@ TX = TX()
 @dataclass(frozen=True)
 class BLOCK:
     MAX_TXS: int = 10000 # max txs allowed per block
-    MAX_FILL_TIME: int = 500 # ms
+    MAX_FILL_TIME: int = 0.5 # ms
 
 BLOCK = BLOCK()
 
@@ -68,3 +68,10 @@ class TRUST_SCORE_FLUCTUATION:
     VALID_TX: int = 1_000
     INVALID_TX: int = -10_000
     RECOVERY_RATE: float = 1
+
+@dataclass(frozen=True)
+class PEER_DB_FLUSH:
+    INBOUND_ADDS: int = 100
+    OUTBOUND_ADDS: int = 10
+    INBOUND_REMOVALS: int = 100
+    OUTBOUND_REMOVALS: int = 10

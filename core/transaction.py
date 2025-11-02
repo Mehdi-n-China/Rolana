@@ -51,17 +51,6 @@ class TransactionContainer:
         check_instance(sig, bytes, 64)
         self.sig = sig
 
-        self.hash = hashlib.sha256(
-            str(self.identity.hex()+
-                self.type+
-                str(self.nonce)+
-                self.to.hex()+
-                str(self.amount)+
-                str(self.fee)+
-                self.game+
-                str(self.params))
-            .encode()).hexdigest()
-
         self.isValid = True
 
     def __str__(self) -> str:
@@ -77,7 +66,6 @@ class TransactionContainer:
                     },
                     "cryptography": {
                         "sig": self.sig.hex(),
-                        "hash": self.hash
                     }
                 }, indent=4)
 

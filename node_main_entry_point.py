@@ -1,91 +1,61 @@
-# hybrid_node_template.py
+
 import threading
-import queue
 import time
-from multiprocessing import Process, Queue as MPQueue
+import datetime
+from managers import *
+import random
 
-# -------------------
-# CPU-Heavy Validator Process
-# -------------------
-def validator_process(inbox: MPQueue, outbox: MPQueue):
-    """CPU-heavy validation tasks live here."""
-    while True:
-        msg = inbox.get()
-        if msg == "STOP":
+from managers import StateManager
+from managers.PeerManager import PeerContainer
+
+class NetworkManager(BaseManager):
+    def _main(self):
+        while True:
+            t0 = time.perf_counter()
+            for i in range(10000):
+                lucky = random.randint(1, 1_000_000)
+                self.send("Mem", {"cmd": "add", "inbound": {f"peer_{lucky}": PeerContainer(f"peer{lucky}", lucky, lucky, lucky, lucky, lucky)}})
+                resp = self.send_with_response("PeerManager", {"cmd": "inquire", "mode": "all"})
+            t1 = time.perf_counter()
+            print(f"Network manager took {t1 - t0} seconds")
             break
-
-        if msg["type"] == "validate_block":
-            block = msg["block"]
-            # Simulate CPU-heavy validation
             time.sleep(1)
-            validated_block = {"type": "validated_block", "block": block}
-            outbox.put(validated_block)
 
-        elif msg["type"] == "ask_example":
-            # respond to ask-style message
-            response = {"type": "response", "data": f"Response to {msg['question']}"}
-            outbox.put(response)
+class GodManager:
+    def __init__(self):
+        self.registry: dict[str, BaseManager] = {}
+        self.block_manager: BlockManager = BlockManager(self)
+        self.mempool_manager: MempoolManager = MempoolManager(self)
+        self.network_manager: NetworkManager = NetworkManager(self)
+        self.peer_db_writer: PeerDataBaseWriter = PeerDataBaseWriter(self)
+        self.peer_manager: PeerManager = PeerManager(self)
+        self.state_manager: StateManager = StateManager(self)
 
+    def register(self, manager):
+        self.registry[manager.__class__.__name__] = manager
 
-# -------------------
-# Thread-Based Components
-# -------------------
-class NetworkManager(threading.Thread):
-    def __init__(self, validator_inbox: MPQueue):
-        super().__init__(daemon=True)
-        self.validator_inbox = validator_inbox
+    def start(self):
+        for manager in self.__dict__.values():
+            if isinstance(manager, BaseManager):
+                print("starting {}".format(manager))
+                threading.Thread(target=manager.start, daemon=True).start()
 
-    def run(self):
-        block_id = 1
-        while True:
-            time.sleep(2)
-            print(f"[NetworkManager] Received Block#{block_id}")
-            # Send to validator for CPU-heavy validation
-            self.validator_inbox.put({"type": "validate_block", "block": f"Block#{block_id}"})
-            block_id += 1
+    def stop(self):
+        for manager in self.__dict__.values():
+            if isinstance(manager, BaseManager):
+                manager.stop()
 
-
-class ChainManager(threading.Thread):
-    def __init__(self, validator_outbox: MPQueue):
-        super().__init__(daemon=True)
-        self.validator_outbox = validator_outbox
-
-    def run(self):
-        while True:
-            msg = self.validator_outbox.get()
-            if msg["type"] == "validated_block":
-                print(f"[ChainManager] Block processed: {msg['block']}")
-            elif msg["type"] == "response":
-                print(f"[ChainManager] Got response: {msg['data']}")
+    def route(self, target_name, msg):
+        target = self.registry.get(target_name)
+        if target:
+            target.inbox.put(msg)
 
 
-# -------------------
-# Main Node Entry
-# -------------------
-if __name__ == "__main__":
-    # Multiprocessing queues for CPU-heavy validator
-    validator_inbox = MPQueue()
-    validator_outbox = MPQueue()
+def main() -> None:
+    Node = GodManager()
+    Node.start()
+    while True:
+        time.sleep(42069)
 
-    # Start validator process
-    validator = Process(target=validator_process, args=(validator_inbox, validator_outbox))
-    validator.start()
-
-    # Start thread-based main components
-    network = NetworkManager(validator_inbox)
-    chain = ChainManager(validator_outbox)
-    network.start()
-    chain.start()
-
-    try:
-        # Example of ask message
-        time.sleep(5)
-        validator_inbox.put({"type": "ask_example", "question": "What is the answer?"})
-
-        # Keep main alive
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        print("Shutting down...")
-        validator_inbox.put("STOP")
-        validator.join()
+if __name__ == '__main__':
+    main()
