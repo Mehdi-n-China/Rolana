@@ -5,7 +5,7 @@ Project Rolana is a Solana pegged self-hosted coin that runs on an optimised and
 The goal of Rolana is to provide a viable side chain to SOL for gambling purposes.
 
 ### Problem to solve:
-Currently, the gambling seen is monopolized by a few giants of the industry, Online casinos have multiple issues like trust-based randomness or excessive fees.
+Currently, the gambling scene is monopolized by a few giants of the industry, Online casinos have multiple issues like trust-based randomness or excessive fees.
 The other alternative is gambling tokens or even gambling contracts on other main Chains like SOL or ETH.
 The problem here araises from the fact that these chains charge you fees for every bet placed.
 This is because they are not made for handling the special type of transaction that a bet is.
