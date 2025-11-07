@@ -18,21 +18,15 @@ class TX:
     SWAP_REQUIREMENTS: tuple = ("to", "amount", "fee")
     DELEGATE_REQUIREMENTS: tuple = ("to", "amount", "fee")
 
-TX = TX()
-
 @dataclass(frozen=True)
 class BLOCK:
     MAX_TXS: int = 10000 # max txs allowed per block
     MAX_FILL_TIME: int = 0.5 # ms
 
-BLOCK = BLOCK()
-
 @dataclass(frozen=True)
 class CONSENSUS:
     MAX_VALIDATORS: int = 69
     MIN_SIGNATURES: int = 46 # minimum consensus signatures required
-
-CONSENSUS = CONSENSUS()
 
 @dataclass(frozen=True)
 class BASE_FEES:
@@ -40,15 +34,11 @@ class BASE_FEES:
     SWAP: int = 10000
     DELEGATE: int = 10000
 
-BASE_FEES = BASE_FEES()
-
 @dataclass(frozen=True)
 class FEE_RATE:
-    TRANSFER: int = 0.0001
-    SWAP: int = 0.0001
-    DELEGATE: int = 0.0001
-
-FEE_RATE = FEE_RATE()
+    TRANSFER: float = 0.0001
+    SWAP: float = 0.0001
+    DELEGATE: float = 0.0001
 
 @dataclass(frozen=True)
 class MINIMUMS:
@@ -75,3 +65,7 @@ class PEER_DB_FLUSH:
     OUTBOUND_ADDS: int = 10
     INBOUND_REMOVALS: int = 100
     OUTBOUND_REMOVALS: int = 10
+
+@dataclass(frozen=True)
+class STATE:
+    MAX_CACHE: int = 10_000_000

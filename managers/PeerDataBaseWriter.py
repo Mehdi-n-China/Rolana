@@ -11,13 +11,12 @@ class PeerDataBaseWriter(BaseManager):
         self._last_commit = time.perf_counter()
 
     def start(self):
-        self.conn = sqlite3.connect('config/peers.db', check_same_thread=False)
+        self.conn = sqlite3.connect('Databases/peers.db', check_same_thread=False)
         self.pointer = self.conn.cursor()
 
         self.pointer.executescript("""
             PRAGMA journal_mode = WAL;
             PRAGMA synchronous = FULL;
-            PRAGMA cache_size = 0;
         """)
 
         self.pointer.execute("""

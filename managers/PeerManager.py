@@ -133,14 +133,14 @@ class PeerManager(BaseManager):
                 self.handle_msg(msg)
 
     def handle_msg(self, msg: dict[str, Any]) -> None:
-        match msg.get("cmd", None):
+        match msg.get("cmd"):
             case "add":
-                self.add_peers(inbound_peers=msg.get("inbound", None),
-                               outbound_peers=msg.get("outbound", None))
+                self.add_peers(inbound_peers=msg.get("inbound"),
+                               outbound_peers=msg.get("outbound"))
 
             case "remove":
-                self.remove_peers(inbound_peers=msg.get("inbound", None),
-                                  outbound_peers=msg.get("outbound", None))
+                self.remove_peers(inbound_peers=msg.get("inbound"),
+                                  outbound_peers=msg.get("outbound"))
 
             case "inquire":
                 match msg.get("mode", None):
@@ -151,6 +151,8 @@ class PeerManager(BaseManager):
                     case "all":
                         self.reply(msg, {"inbound": self.inbound, "outbound": self.outbound})
 
+            case _:
+                raise RuntimeError(f"Unhandled msg: {msg}")
 
 class PeerContainer:
     def __init__(self, ip: str = "", port: int = 0, last_connection: int = 0,

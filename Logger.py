@@ -49,6 +49,8 @@ class Logger:
             msg = f"{msg}\n{tb}"
         self._write("error", msg)
 
+del hi
+
 
 # usage
 Logger = Logger()

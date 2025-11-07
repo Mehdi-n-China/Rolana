@@ -1,41 +1,57 @@
+from typing import Any
 
 from .BaseManager import BaseManager
-import sqlite3
 
 from collections import OrderedDict
+import CONSTANTS
 
 class StateManager(BaseManager):
-    def __init__(self, god_manager):
+    def __init__(self, god_manager: object) -> None:
         super().__init__(god_manager)
-        self._state = OrderedDict()
-        self._dirty_users = set()
+        self._cache = OrderedDict()
+        self._dirty_users = dict()
 
-    def get(self, key):
+    def _get(self, key: str) -> object:
         if key in self._cache:
             return self._cache[key]
         else:
-            account = self.send_with_response()
+            account = self.send_with_response("StateDBManager", {"cmd": "get", "key": key})
+            return account
+
+    def _set(self, key, account) -> None:
+        self._cache.update({key: account})
+        self._dirty_users.update({key: account})
+        if len(self._cache) > CONSTANTS.STATE.MAX_CACHE:
+            self._dirty_users.update({key: account for key, account in self._cache.popitem(last=False)})
 
 
-    def set(self, key, value, mark_dirty=True):
-        if key in self.cache:
-            self.cache.move_to_end(key)
-        self.cache[key] = value
-        if len(self.cache) > self.capacity:
-            oldest, _ = self.cache.popitem(last=False)
-            # optionally flush oldest to disk
-        if mark_dirty:
-            self.dirty.add(key)
+    def _flush(self):
+        self.send("StateDBManager", {"cmd": "flush", "accounts": self._dirty_users})
+        self._dirty_users.clear()
 
-    def flush(self, writer):
-        for key in list(self.dirty):
-            writer(key, self.cache[key])
-            self.dirty.remove(key)
+    def _main(self):
+        while True:
+            msgs = self.await_drain_inbox()
+            for msg in msgs:
+                handle_msg(msg)
 
-class _Accpunts:
-    def __init__(self, pub_key):
+    def handle_msg(self, msg):
+        match msg.get("cmd"):
+            case "get":
+                self.reply(msg, self.get(msg.get("key")))
+
+            case "set":
+                msg
+
+            case _:
+                raise RuntimeError()
+
+
+class _Accounts:
+    def __init__(self, pub_key, balance, nonce):
         self.pub_key = pub_key
         self.balance = balance
+        self.locked_balance = locked_balance
         self.nonce = nonce
         self.
 

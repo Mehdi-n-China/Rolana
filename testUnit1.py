@@ -1,38 +1,31 @@
-import time
-from collections import OrderedDict
-import random
 
-N = 10_000_000  # number of items
-iterations = 10000
+NUM_TXS = 1_000_000      # total number of signatures to verify
+NUM_WORKERS = cpu_count()
 
-# Prefill dict and OrderedDict
-print("filling plain dict")
-d_plain = {i: i for i in range(N)}
-print("filling ordered dict")
-d_ordered = OrderedDict((i, i) for i in range(N))
+# --- Pre-generate a single key and signature to reuse ---
+sk = SigningKey.generate()
+vk = sk.verify_key
+message = b"benchmark_message"
+sig = sk.sign(message)
 
-# Warm-up
-print("warming up")
-d_temp = dict(d_plain)
-for _ in range(10):
-    del d_temp[next(iter(d_temp))]
+# Worker function: verify the same signature many times
+def worker_verify(n):
+    for _ in range(n):
+        vk.verify(sig)
+    return n
 
-# Benchmark plain dict
-dict_times = []
-d_temp = dict(d_plain)
-removals = random.sample(list(range(N)), k=iterations)
-for _ in range(iterations):
-    start = time.perf_counter()
-    del d_temp[removals[_]]
-    dict_times.append(time.perf_counter() - start)
+if __name__ == "__main__":
+    # Split total TXs evenly across workers
+    txs_per_worker = NUM_TXS // NUM_WORKERS + 1
+    start = time.time()
 
-# Benchmark OrderedDict
-ordered_times = []
-d_temp = OrderedDict(d_ordered)
-for _ in range(iterations):
-    start = time.perf_counter()
-    d_temp.popitem(last=False)
-    ordered_times.append(time.perf_counter() - start)
+    with Pool(NUM_WORKERS) as pool:
+        results = pool.map(worker_verify, [txs_per_worker] * NUM_WORKERS)
 
-print("Average next(iter(d)) + del (dict):", sum(dict_times)/iterations)
-print("Average popitem(last=False) (OrderedDict):", sum(ordered_times)/iterations)
+    end = time.time()
+    total_verified = sum(results)
+    elapsed = end - start
+
+    print(f"Total verifications: {total_verified}")
+    print(f"Time taken with {NUM_WORKERS} processes: {elapsed:.4f}s")
+    print(f"Throughput: {total_verified / elapsed:.0f} sigs/sec")

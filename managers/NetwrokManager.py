@@ -9,15 +9,12 @@ class NetworkManager(threading.Thread):
         self.inbox = queue.Queue()
         self.outbox = queue.Queue()
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_socket.bind(('0.0.0.0', 8333))  # example port
+        self.server_socket.bind(('0.0.0.0', 8333))
         self.server_socket.listen(5)
 
     def run(self):
-        # Start thread to accept inbound connections
         threading.Thread(target=self.accept_inbound, daemon=True).start()
-        # Start thread to manage outbound connections
         threading.Thread(target=self.connect_outbound, daemon=True).start()
-        # Process inbox/outbox messages
         while True:
             self.process_messages()
 
@@ -58,4 +55,3 @@ class NetworkManager(threading.Thread):
         while not self.inbox.empty():
             peer_id, data = self.inbox.get()
             print(f"[NetworkManager] Received from {peer_id}: {data}")
-            # TODO: decode and dispatch messages
