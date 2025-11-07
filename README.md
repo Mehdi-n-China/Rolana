@@ -29,5 +29,7 @@ This repository demonstrates coding style, modular structure, and logic—not us
 #### Key modules:
 
 Node Software (WIP)
+
 Game Engine (WIP)
+
 Wallet Software (Not Implemented Yet)
