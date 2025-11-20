@@ -1,6 +1,6 @@
 from .BaseManager import BaseManager
 import sqlite3
-
+import json
 
 class StateDBManager(BaseManager):
     def __init__(self, god_manager: object) -> None:
@@ -23,33 +23,36 @@ class StateDBManager(BaseManager):
         """)
 
         self.pointer.execute("""
-        CREATE TABLE IF NOT EXISTS globals (
-            key TEXT PRIMARY KEY,
-            value TEXT
+            CREATE TABLE IF NOT EXISTS globals (
+                key TEXT PRIMARY KEY,
+                value TEXT
+            )
         """)
 
 
         self.conn.commit()
 
     def _get(self, key: str):
-        """Return account JSON string by pub_key, or None if missing."""
         self.pointer.execute(
             "SELECT data FROM accounts WHERE pub_key = ?",
             (key,)
         )
         row = self.pointer.fetchone()
-        return row[0] if row else None
+        return json.loads(row[0]) if row else None
 
-    def _set(self, updates: dict):
-        """Flush state changes to disk. Expects {pub_key: json_string}."""
-        if not updates:
-            return
-
+    def _set(self, account_data: dict, global_data: dict) -> None:
         self.pointer.executemany(
             "INSERT INTO accounts (pub_key, data) VALUES (?, ?) "
             "ON CONFLICT(pub_key) DO UPDATE SET data = excluded.data",
-            [(k, v) for k, v in updates.items()]
+            [(k, json.dumps(v)) for k, v in account_data.items()]
         )
+
+        self.pointer.executemany(
+            "INSERT INTO globals (key, data) VALUES (?, ?) "
+            "ON CONFLICT(key) DO UPDATE SET data = excluded.data",
+            [(k, v) for k, v in global_data.items()]
+        )
+
 
         self.conn.commit()
 
@@ -66,16 +69,5 @@ class StateDBManager(BaseManager):
             case "get":
                 self.reply(msg, self._get(msg.get("key")))
 
-            case "set_account":
-                self._set(msg.get("updates"))
-
-            case "set_chain":
-                self._set(msg.get("chain"))
-
-            case "set"
-        elif cmd == "set":
-            updates = msg.get("updates")
-            self._set(updates)
-        else:
-            # optional: reply with error or ignore
-            self.reply(msg, None)
+            case "set":
+                self._set(msg.get("type"), msg.get("data"))

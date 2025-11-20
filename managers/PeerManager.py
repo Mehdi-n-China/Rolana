@@ -60,10 +60,10 @@ class PeerManager(BaseManager):
         }
 
     def add_peers(
-        self, *,
-        inbound_peers: dict[str, object] = None,
-        outbound_peers: dict[str, object] = None
-    ) -> None:
+            self, *,
+            inbound_peers: dict[str, object] = None,
+            outbound_peers: dict[str, object] = None
+        ) -> None:
 
         if inbound_peers:
             self.inbound.update(inbound_peers)
@@ -107,7 +107,9 @@ class PeerManager(BaseManager):
                 self._needs_commit = True
 
         if self._needs_commit or time.perf_counter() - self._last_commit > 60:
+            print(f"[{__name__}] -> commiting to db... ", end="")
             self._push_to_db()
+            print("Done!")
 
 
     def _push_to_db(self) -> None:
@@ -135,12 +137,16 @@ class PeerManager(BaseManager):
     def handle_msg(self, msg: dict[str, Any]) -> None:
         match msg.get("cmd"):
             case "add":
-                self.add_peers(inbound_peers=msg.get("inbound"),
-                               outbound_peers=msg.get("outbound"))
+                self.add_peers(
+                    inbound_peers=msg.get("inbound"),
+                    outbound_peers=msg.get("outbound")
+                )
 
             case "remove":
-                self.remove_peers(inbound_peers=msg.get("inbound"),
-                                  outbound_peers=msg.get("outbound"))
+                self.remove_peers(
+                    inbound_peers=msg.get("inbound"),
+                    outbound_peers=msg.get("outbound")
+                )
 
             case "inquire":
                 match msg.get("mode", None):

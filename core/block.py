@@ -3,9 +3,8 @@ import time
 import hashlib
 
 import CONSTANTS
-from Mempool import Mempool
 from core.transaction import TransactionContainer
-from ._crypto import signMessage, makePair, format, validateSignature
+from ._crypto import signessage, makePair, format, validateSignature
 
 class BlockContainer:
     def __init__(self, index: int, previousHash: str, txs: list[TransactionContainer], ) -> None:

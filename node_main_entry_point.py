@@ -5,7 +5,6 @@ import datetime
 from managers import *
 import random
 
-from managers import StateManager
 from managers.PeerManager import PeerContainer
 
 class NetworkManager(BaseManager):
